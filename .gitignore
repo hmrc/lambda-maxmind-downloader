@@ -22,4 +22,10 @@ npm-debug.log
 yarn-debug.log
 yarn-error.log
 
-    
+output
+test_output
+.idea
+.coverage
+__pycache__
+target
+
