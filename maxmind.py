@@ -97,7 +97,7 @@ class MaxmindDownloader():
         dir, file_name = relative_path.split("/")
         edition, file_date = dir.split("_")
 
-        s3_path = "{}/{}_{}".format(edition, file_date, file_name)
+        s3_path = "{}/{}-{}".format(edition, file_date, file_name)
 
         return s3_path
 

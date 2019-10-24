@@ -72,8 +72,8 @@ class TestLambdaHandler(unittest.TestCase):
         client = boto3.client("s3")
         response = client.list_objects(Bucket=self.s3_bucket)
 
-        assert_that(response['Contents'][0]['Key'], equal_to('test1/20190101_test1.mmdb'))
-        assert_that(response['Contents'][1]['Key'], equal_to('test1/20190102_test-Locations-en.csv'))
+        assert_that(response['Contents'][0]['Key'], equal_to('test1/20190101-test1.mmdb'))
+        assert_that(response['Contents'][1]['Key'], equal_to('test1/20190102-test-Locations-en.csv'))
         assert_that(len(response['Contents']), equal_to(2), response['Contents'])
 
 
