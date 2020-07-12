@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import requests
-import boto3
+import boto3  # type: ignore
 import os
 import logging
 import tarfile
@@ -14,25 +14,25 @@ logger = logging.getLogger()
 logger.setLevel(level=logging.INFO)
 
 
-class MaxmindDownloader():
-
+class MaxmindDownloader:
     def __init__(self):
-        self.maxmind_license = os.getenv("MAXMIND_LICENSE", None)
+        self.maxmind_license = os.environ.get("MAXMIND_LICENSE", None)
         self.geoip_repo = os.getenv("GEOIP_REPO", "maxmind")
         self.maxmind_s3_bucket = os.getenv("MAXMIND_S3_BUCKET", None)
         self.download_location = os.getenv("DOWNLOAD_LOCATION", "output")
-        self.geoip_db_list = \
-            os.getenv("GEOIP_DB_LIST", "GeoIP2-ISP,"
-                                       "GeoIP2-Connection-Type,"
-                                       "GeoIP2-Domain,"
-                                       "GeoIP2-City,"
-                                       "GeoIP2-Anonymous-IP").split(',')
-        self.geoip_csv_list = os.getenv("GEOIP_CSV_LIST",
-                                        "GeoIP2-City-CSV").split(',')
+        self.geoip_db_list = os.getenv(
+            "GEOIP_DB_LIST",
+            "GeoIP2-ISP,"
+            "GeoIP2-Connection-Type,"
+            "GeoIP2-Domain,"
+            "GeoIP2-City,"
+            "GeoIP2-Anonymous-IP",
+        ).split(",")
+        self.geoip_csv_list = os.getenv("GEOIP_CSV_LIST", "GeoIP2-City-CSV").split(",")
         self.maxmind_url = "https://download.maxmind.com"
 
         if self.maxmind_license is None:
-            raise Exception("MAXMIND_LICENSE ndeeds to be set")
+            raise Exception("MAXMIND_LICENSE needs to be set")
 
         if self.maxmind_s3_bucket is None:
             raise Exception("MAXMIND_S3_BUCKET needs to be set")
@@ -57,14 +57,14 @@ class MaxmindDownloader():
 
             client = boto3.client("s3")
             for file in files_to_upload:
-                body_data = open(file, 'rb')
+                body_data = open(file, "rb")
                 s3_path = self.generate_s3_path(file)
                 logger.info("Saving {} to {}".format(file, s3_path))
                 client.put_object(
-                    ACL='private',
+                    ACL="private",
                     Body=body_data,
                     Bucket=self.maxmind_s3_bucket,
-                    Key=s3_path
+                    Key=s3_path,
                 )
 
             self.folder_cleanup()
@@ -79,18 +79,19 @@ class MaxmindDownloader():
                     # file_info = z.getinfo(zip_entry)
                     s3_path = self.generate_s3_path(zip_entry)
                     logger.info("Saving {} to {}".format(zip_entry, s3_path))
-                    s3_resource = boto3.resource('s3')
+                    s3_resource = boto3.resource("s3")
                     s3_resource.meta.client.upload_fileobj(
                         z.open(zip_entry),
                         Bucket=self.maxmind_s3_bucket,
-                        Key=f'{s3_path}'
+                        Key=f"{s3_path}",
                     )
         self.folder_cleanup()
 
     def generate_s3_path(self, file_path):
         if self.download_location in file_path:
-            target_locatiom, relative_path = \
-                file_path.split(self.download_location + "/")
+            target_locatiom, relative_path = file_path.split(
+                self.download_location + "/"
+            )
         else:
             relative_path = file_path
 
@@ -106,32 +107,29 @@ class MaxmindDownloader():
         # Fetching files
         logger.info("Downloading {}".format(edition))
 
-        md5_response = requests.get("{}/app/geoip_download?"
-                                    "edition_id={}&"
-                                    "suffix={}.md5&"
-                                    "license_key="
-                                    "{}".format(self.maxmind_url,
-                                                edition,
-                                                suffix,
-                                                self.maxmind_license))
+        md5_response = requests.get(
+            "{}/app/geoip_download?"
+            "edition_id={}&"
+            "suffix={}.md5&"
+            "license_key="
+            "{}".format(self.maxmind_url, edition, suffix, self.maxmind_license)
+        )
         md5_response.raise_for_status()
         md5_sum = md5_response.text
 
-        with requests.get("{}/app/geoip_download?"
-                          "edition_id={}&"
-                          "suffix={}&"
-                          "license_key="
-                          "{}".format(self.maxmind_url,
-                                      edition,
-                                      suffix,
-                                      self.maxmind_license)) as r:
+        with requests.get(
+            "{}/app/geoip_download?"
+            "edition_id={}&"
+            "suffix={}&"
+            "license_key="
+            "{}".format(self.maxmind_url, edition, suffix, self.maxmind_license)
+        ) as r:
             r.raise_for_status()
-            filename = "{}/{}.{}".format(self.download_location,
-                                         edition, suffix)
+            filename = "{}/{}.{}".format(self.download_location, edition, suffix)
             logger.info("Saving {}".format(filename))
 
             os.makedirs(os.path.dirname(filename), exist_ok=True)
-            with open(filename, 'wb') as f:
+            with open(filename, "wb") as f:
                 for chunk in r.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
@@ -143,9 +141,12 @@ class MaxmindDownloader():
         # Checking md5 sum of file
         file_md5 = self.md5(filename)
         if str(file_md5) != str(md5_sum):
-            raise Exception("MD5 Sum of downloaded file {} does"
-                            " not match, expected: {}, found: {}".
-                            format(filename, str(file_md5), str(md5_sum)))
+            raise Exception(
+                "MD5 Sum of downloaded file {} does"
+                " not match, expected: {}, found: {}".format(
+                    filename, str(file_md5), str(md5_sum)
+                )
+            )
 
         return filename
 

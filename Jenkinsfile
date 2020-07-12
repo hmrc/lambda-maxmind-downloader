@@ -1,28 +1,29 @@
 #!/usr/bin/env groovy
-pipeline {
-  agent {
-    label 'commonslave'
+node('commonslave') {
+  stage('git checkout') {
+    step([$class: 'WsCleanup'])
+    checkout(scm)
   }
-
-  stages {
-    stage('Prepare') {
-      steps {
-        step([$class: 'WsCleanup'])
-        checkout(scm)
-        sh("make clean test")
-      }
-    }
-    stage('Build artefact') {
-      steps {
-        sh('make clean build')
-      }
-    }
-    stage('Upload to s3') {
-      steps {
-        sh("""
-           make push-s3 S3_BUCKET=txm-lambda-functions-tools
-           """)
-      }
-    }
+  stage('Prepare python environment') {
+    sh('make ci_docker_build')
+  }
+  stage('setup') {
+    sh('make ci_setup')
+  }
+  stage('test') {
+    sh('make ci_test')
+  }
+  stage('security') {
+    sh('make ci_security_checks')
+  }
+  stage('package') {
+    sh('make ci_package')
+  }
+  stage('publish') {
+    sh("""
+        make publish BUCKET_NAME=txm-lambda-functions-tools
+        make publish BUCKET_NAME=txm-lambda-functions-integration
+        make publish BUCKET_NAME=txm-lambda-functions-production
+    """)
   }
 }

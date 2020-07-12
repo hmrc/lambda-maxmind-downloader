@@ -28,4 +28,7 @@ test_output
 .coverage
 __pycache__
 target
-
+*.zip
+*.base64sha256
+.release-version
+.venv
