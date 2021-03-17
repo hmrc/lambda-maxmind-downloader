@@ -66,11 +66,7 @@ setup: check_poetry
 	poetry install --no-root
 	@echo '*************** Installation Complete ******************'
 
-setup_git_hooks: check_poetry
-	@echo '****** Setting up git hooks ******'
-	poetry run pre-commit install
-
-install: setup setup_git_hooks  ## Install a local development environment
+install: setup   ## Install a local development environment
 
 typechecking: setup
 	poetry run mypy ./maxmind.py
