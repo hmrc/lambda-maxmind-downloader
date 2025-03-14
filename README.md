@@ -43,8 +43,7 @@ There are a few other environment variables which can be set but, however they h
 #### Lambda policy
 
 The policy for the lambda should allow it to at minimum access the s3 bucket for storing
- 
--  
+
 ```buildoutcfg
 {
     "Version": "2012-10-17",
